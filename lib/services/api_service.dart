@@ -6,7 +6,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> startTrip({
     required String routeId,
-    required String driverId,
+    required String driverId
     required String vehicleId,
   }) async {
     try {
