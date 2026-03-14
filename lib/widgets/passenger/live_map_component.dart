@@ -7,65 +7,68 @@ class LiveMapComponent extends StatefulWidget {
 
   final Function(GoogleMapController)? onControllerCreated;
 
-  const LiveMapComponent({super.key, required this.journeyId, this.onControllerCreated});
+  const LiveMapComponent({
+    super.key,
+    required this.journeyId,
+    this.onControllerCreated,
+  });
 
   @override
   State<LiveMapComponent> createState() => _LiveMapComponentState();
 }
 
 // Added SingleTickerProviderStateMixin for the AnimationController
-class _LiveMapComponentState extends State<LiveMapComponent> with SingleTickerProviderStateMixin {
+class _LiveMapComponentState extends State<LiveMapComponent> {
   GoogleMapController? _mapController;
   Marker? _busMarker;
   LatLng _lastPosition = const LatLng(5.7596, -0.2197);
 
-  late AnimationController _animationController;
-  BitmapDescriptor? _customIcon;
-
   @override
   void initState() {
     super.initState();
-
-    // Initialize the controller first
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
     // Call the async setup
     _setupTracking();
   }
 
   // Proper way to handle async initialization in initState
   Future<void> _setupTracking() async {
-    await _loadCustomIcon();
     _subscribeToLiveLocation();
-  }
-
-  // Modern way to load map assets (replacing deprecated fromAssetImage)
-  Future<void> _loadCustomIcon() async {
-    final icon = await AssetMapBitmap.create(
-      const ImageConfiguration(size: Size(48, 48)),
-      'assets/images/bus_top_view.png',
-    );
-    if (mounted) {
-      setState(() => _customIcon = icon);
-    }
   }
 
   void _subscribeToLiveLocation() {
     print("📡 Attempting to join channel: journey_${widget.journeyId}");
 
-    final channel = Supabase.instance.client.channel('journey_${widget.journeyId}');
+    final channel = Supabase.instance.client.channel(
+      'journey_${widget.journeyId}',
+    );
 
     channel
         .onBroadcast(
           event: 'location_update',
           callback: (payload) {
-            print('✅ DATA RECEIVED: $payload'); // This will show in your console
-            final double lat = (payload['lat'] as num).toDouble();
-            final double lng = (payload['lng'] as num).toDouble();
-            final double heading = (payload['heading'] ?? 0.0).toDouble();
+            print(
+              '✅ DATA RECEIVED: $payload',
+            ); // This will show in your console
+
+            // Supabase wraps the data in an inner 'payload' object when broadcasting
+            final innerData = payload['payload'] ?? {};
+
+            final latRaw = innerData['lat'];
+            final lngRaw = innerData['lng'];
+            final headingRaw = innerData['heading'] ?? 0.0;
+
+            // Safety checks to handle missing data or type differences
+            if (latRaw == null || lngRaw == null) return;
+
+            final double lat = (latRaw is num)
+                ? latRaw.toDouble()
+                : double.tryParse(latRaw.toString()) ?? 0.0;
+            final double lng = (lngRaw is num)
+                ? lngRaw.toDouble()
+                : double.tryParse(lngRaw.toString()) ?? 0.0;
+            final double heading = (headingRaw is num)
+                ? headingRaw.toDouble()
+                : double.tryParse(headingRaw.toString()) ?? 0.0;
 
             _updateBusMarker(LatLng(lat, lng), heading);
           },
@@ -82,39 +85,22 @@ class _LiveMapComponentState extends State<LiveMapComponent> with SingleTickerPr
   }
 
   void _updateBusMarker(LatLng targetPosition, double rotation) {
-    // Kill existing listeners to prevent multiple tweens fighting
-    _animationController.stop();
-    _animationController.clearListeners();
+    if (mounted) {
+      setState(() {
+        _lastPosition = targetPosition;
 
-    final latTween = Tween<double>(begin: _lastPosition.latitude, end: targetPosition.latitude);
-    final lngTween = Tween<double>(begin: _lastPosition.longitude, end: targetPosition.longitude);
-
-    _animationController.addListener(() {
-      if (mounted) {
-        setState(() {
-          _lastPosition = LatLng(
-            latTween.evaluate(_animationController),
-            lngTween.evaluate(_animationController),
-          );
-
-          _busMarker = Marker(
-            markerId: const MarkerId('live_bus'),
-            position: _lastPosition,
-            rotation: rotation,
-            flat: true,
-            anchor: const Offset(0.5, 0.5),
-            icon: _customIcon ?? BitmapDescriptor.defaultMarker,
-          );
-        });
-      }
-    });
-
-    _animationController.forward(from: 0);
+        _busMarker = Marker(
+          markerId: const MarkerId('live_bus'),
+          position: _lastPosition,
+          anchor: const Offset(0.5, 0.5),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        );
+      });
+    }
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -122,11 +108,37 @@ class _LiveMapComponentState extends State<LiveMapComponent> with SingleTickerPr
     _mapController?.animateCamera(CameraUpdate.newLatLng(_lastPosition));
   }
 
+  // Simplified map style to reduce OpenGL memory load on Android devices
+  final String _mapStyle = '''
+  [
+    {
+      "featureType": "poi",
+      "stylers": [
+        { "visibility": "off" }
+      ]
+    },
+    {
+      "featureType": "transit",
+      "stylers": [
+        { "visibility": "off" }
+      ]
+    },
+    {
+      "featureType": "landscape.man_made",
+      "elementType": "geometry.fill",
+      "stylers": [
+        { "visibility": "off" }
+      ]
+    }
+  ]
+  ''';
+
   @override
   Widget build(BuildContext context) {
     // Removed Scaffold because this is now a Component to be used in a Stack
     return GoogleMap(
       initialCameraPosition: CameraPosition(target: _lastPosition, zoom: 15),
+      style: _mapStyle, // Apply performance-focused style
       onMapCreated: (controller) {
         _mapController = controller;
 

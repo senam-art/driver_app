@@ -14,9 +14,13 @@ class PassengerMainWrapper extends StatefulWidget {
 class _PassengerMainWrapperState extends State<PassengerMainWrapper> {
   int _selectedIndex = 0;
 
+  // Track which tabs have been visited to lazy-load heavy pages like the Map
+  final List<bool> _initializedPages = [true, false, false, false, false];
+
   final List<Widget> _pages = [
-    PassengerHome(),
+    PassengerHome(), 
     TrackTab(),
+    const SizedBox.shrink(), // Index 2 is the spacer for NFC button
     const Center(child: Text("My Tickets & History")),
     const Center(child: Text("Profile & Settings")),
   ];
@@ -35,7 +39,13 @@ class _PassengerMainWrapperState extends State<PassengerMainWrapper> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      // Lazy load pages so Google Maps doesn't crash the app on startup
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: List.generate(_pages.length, (index) {
+          return _initializedPages[index] ? _pages[index] : const SizedBox.shrink();
+        }),
+      ),
 
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
@@ -56,7 +66,10 @@ class _PassengerMainWrapperState extends State<PassengerMainWrapper> {
             currentIndex: _selectedIndex,
             onTap: (index) {
               if (index == 2) return; // Prevent dead click on spacer
-              setState(() => _selectedIndex = index);
+              setState(() {
+                _selectedIndex = index;
+                _initializedPages[index] = true;
+              });
             },
             type: BottomNavigationBarType.fixed,
             selectedItemColor: const Color(0xFFC62828),
