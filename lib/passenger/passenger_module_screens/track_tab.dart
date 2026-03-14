@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:driver_app/widgets/passenger/live_map_component.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 // Dummy model for demonstration
 class _RouteData {
@@ -25,24 +26,25 @@ class TrackTab extends StatefulWidget {
 }
 
 class _TrackTabState extends State<TrackTab> {
+  GoogleMapController? _mapController;
   final PageController _pageController = PageController(viewportFraction: 0.9);
-  
+
+  String _currentJourneyId = "bus-402-demo";
+
   final List<_RouteData> _activeRoutes = [
     _RouteData(
-        routeName: "Route 402 - Main Campus",
-        status: "Live",
-        passengerCount: 32,
-        capacity: 45),
+      routeName: "Route 402 - Main Campus",
+      status: "Live",
+      passengerCount: 32,
+      capacity: 45,
+    ),
     _RouteData(
-        routeName: "Route 105 - Accra Mall",
-        status: "Delayed",
-        passengerCount: 40,
-        capacity: 45),
-    _RouteData(
-        routeName: "Route 311 - Madina",
-        status: "Live",
-        passengerCount: 12,
-        capacity: 30),
+      routeName: "Route 105 - Accra Mall",
+      status: "Delayed",
+      passengerCount: 40,
+      capacity: 45,
+    ),
+    _RouteData(routeName: "Route 311 - Madina", status: "Live", passengerCount: 12, capacity: 30),
   ];
 
   @override
@@ -57,7 +59,12 @@ class _TrackTabState extends State<TrackTab> {
       body: Stack(
         children: [
           // 1. THE MAP (Base Layer)
-          const Positioned.fill(child: LiveMapComponent(journeyId: "bus-402-demo")),
+          Positioned.fill(
+            child: LiveMapComponent(
+              journeyId: _currentJourneyId,
+              onControllerCreated: (controller) => _mapController = controller,
+            ),
+          ),
 
           // 2. SLIDABLE ROUTE CAROUSEL (Top overlay)
           Positioned(
@@ -68,18 +75,19 @@ class _TrackTabState extends State<TrackTab> {
             child: PageView.builder(
               controller: _pageController,
               itemCount: _activeRoutes.length,
+              onPageChanged: (int index) {
+                setState(() {
+                  _currentJourneyId = _currentJourneyId;
+                });
+              },
               itemBuilder: (context, index) {
                 return _buildRouteCard(_activeRoutes[index]);
               },
             ),
           ),
-          
+
           // 3. RE-CENTER LOCATION BUTTON (Floating above the bottom nav)
-          Positioned(
-            bottom: 40,
-            right: 20,
-            child: _buildLocationButton(),
-          ),
+          Positioned(bottom: 40, right: 20, child: _buildLocationButton()),
         ],
       ),
     );
@@ -97,12 +105,12 @@ class _TrackTabState extends State<TrackTab> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.5)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -114,7 +122,7 @@ class _TrackTabState extends State<TrackTab> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFC62828).withOpacity(0.15),
+                    color: const Color(0xFFC62828).withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -124,7 +132,7 @@ class _TrackTabState extends State<TrackTab> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Route Details Middle
                 Expanded(
                   child: Column(
@@ -164,12 +172,12 @@ class _TrackTabState extends State<TrackTab> {
                     ],
                   ),
                 ),
-                
+
                 // Passenger Info Right
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -202,16 +210,14 @@ class _TrackTabState extends State<TrackTab> {
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
+          BoxShadow(color: Colors.black.withAlpha(3), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: IconButton(
         icon: const Icon(Icons.my_location_rounded, color: Colors.black87),
         onPressed: () {
+          _mapController?.animateCamera(CameraUpdate.newLatLng(const LatLng(5.7596, -0.2197)));
+
           // Logic to recenter map
         },
       ),
@@ -234,10 +240,8 @@ class _PulsatingDotState extends State<_PulsatingDot> with SingleTickerProviderS
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    )..repeat(reverse: true);
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1))
+      ..repeat(reverse: true);
   }
 
   @override
@@ -264,7 +268,7 @@ class _PulsatingDotState extends State<_PulsatingDot> with SingleTickerProviderS
                   color: widget.color.withOpacity(0.5 * _controller.value),
                   blurRadius: 6 * _controller.value,
                   spreadRadius: 2 * _controller.value,
-                )
+                ),
               ],
             ),
           ),

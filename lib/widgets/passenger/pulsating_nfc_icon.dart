@@ -8,8 +8,7 @@ class PulsatingNfcIcon extends StatefulWidget {
   State<PulsatingNfcIcon> createState() => _PulsatingNfcIconState();
 }
 
-class _PulsatingNfcIconState extends State<PulsatingNfcIcon>
-    with SingleTickerProviderStateMixin {
+class _PulsatingNfcIconState extends State<PulsatingNfcIcon> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -62,20 +61,17 @@ class _PulsatingNfcIconState extends State<PulsatingNfcIcon>
             child: AnimatedBuilder(
               animation: _controller,
               builder: (context, child) {
-                double corePulse =
-                    (0.5 - (0.5 - _controller.value).abs()) * 2.0;
+                double corePulse = (0.5 - (0.5 - _controller.value).abs()) * 2.0;
                 return Container(
                   width: 150,
                   height: 150,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFFC62828).withOpacity(
-                      0.05 + (0.15 * Curves.easeInOut.transform(corePulse)),
-                    ),
+                    color: Color(
+                      0xFFC62828,
+                    ).withValues(alpha: 0.05 + (0.15 * Curves.easeInOut.transform(corePulse))),
                   ),
-                  child: const Center(
-                    child: Icon(Icons.nfc, size: 70, color: Color(0xFFC62828)),
-                  ),
+                  child: const Center(child: Icon(Icons.nfc, size: 70, color: Color(0xFFC62828))),
                 );
               },
             ),
@@ -100,10 +96,7 @@ class _RadiatingArcsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Center point of the core NFC icon
-    final Offset coreCenter = Offset(
-      size.width / 2,
-      size.height - coreCenterYOffset,
-    );
+    final Offset coreCenter = Offset(size.width / 2, size.height - coreCenterYOffset);
 
     // We'll draw 3 radiating arcs that spread upwards at the EXACT SAME TIME
     // The delay parametrizes how far along the radius they are structurally, but they animate
@@ -151,8 +144,7 @@ class _RadiatingArcsPainter extends CustomPainter {
     // An arc spanning 60 degrees centrally focused upwards
     double sweepAngle = math.pi / 3; // 60 degrees
     double startAngle =
-        math.pi +
-        (math.pi - sweepAngle) / 2; // Centers the arc symmetrically at the top
+        math.pi + (math.pi - sweepAngle) / 2; // Centers the arc symmetrically at the top
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),

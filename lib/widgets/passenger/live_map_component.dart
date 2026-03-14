@@ -4,7 +4,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LiveMapComponent extends StatefulWidget {
   final String journeyId;
-  const LiveMapComponent({super.key, required this.journeyId});
+
+  final Function(GoogleMapController)? onControllerCreated;
+
+  const LiveMapComponent({super.key, required this.journeyId, this.onControllerCreated});
 
   @override
   State<LiveMapComponent> createState() => _LiveMapComponentState();
@@ -51,19 +54,31 @@ class _LiveMapComponentState extends State<LiveMapComponent> with SingleTickerPr
   }
 
   void _subscribeToLiveLocation() {
-    Supabase.instance.client
-        .channel('journey_${widget.journeyId}')
+    print("📡 Attempting to join channel: journey_${widget.journeyId}");
+
+    final channel = Supabase.instance.client.channel('journey_${widget.journeyId}');
+
+    channel
         .onBroadcast(
           event: 'location_update',
           callback: (payload) {
-            final double lat = payload['lat'];
-            final double lng = payload['lng'];
+            print('✅ DATA RECEIVED: $payload'); // This will show in your console
+            final double lat = (payload['lat'] as num).toDouble();
+            final double lng = (payload['lng'] as num).toDouble();
             final double heading = (payload['heading'] ?? 0.0).toDouble();
 
             _updateBusMarker(LatLng(lat, lng), heading);
           },
         )
-        .subscribe();
+        .subscribe((status, [error]) {
+          // THIS SECTION IS CRITICAL FOR DEBUGGING
+          print('📡 Channel Status: $status');
+          if (error != null) {
+            // We use 'as dynamic' or just print the error directly to avoid the 'Object' error
+            print('❌ Supabase Error: ${error.toString()}');
+            ;
+          }
+        });
   }
 
   void _updateBusMarker(LatLng targetPosition, double rotation) {
@@ -103,12 +118,23 @@ class _LiveMapComponentState extends State<LiveMapComponent> with SingleTickerPr
     super.dispose();
   }
 
+  void centerMapOnBus() {
+    _mapController?.animateCamera(CameraUpdate.newLatLng(_lastPosition));
+  }
+
   @override
   Widget build(BuildContext context) {
     // Removed Scaffold because this is now a Component to be used in a Stack
     return GoogleMap(
       initialCameraPosition: CameraPosition(target: _lastPosition, zoom: 15),
-      onMapCreated: (controller) => _mapController = controller,
+      onMapCreated: (controller) {
+        _mapController = controller;
+
+        //Passing controller back up to parent
+        if (widget.onControllerCreated != null) {
+          widget.onControllerCreated!(controller);
+        }
+      },
       markers: _busMarker != null ? {_busMarker!} : {},
       myLocationButtonEnabled: false,
       zoomControlsEnabled: false, // Cleaner look for your modular design

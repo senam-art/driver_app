@@ -19,6 +19,7 @@ class _BoardingFlowContainerState extends State<BoardingFlowContainer> {
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -67,7 +68,10 @@ class _BoardingFlowContainerState extends State<BoardingFlowContainer> {
       children: [
         const Text("Ready to Board", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
-        const Text("Hold your phone near the bus sticker", style: TextStyle(color: Colors.grey)),
+        const Text(
+          "Hold your phone near the bus sticker, make sure NFC is enabled ",
+          style: TextStyle(color: Colors.grey),
+        ),
         const Spacer(),
 
         const PulsatingNfcIcon(), // Uses the animation logic from previous steps
@@ -78,7 +82,7 @@ class _BoardingFlowContainerState extends State<BoardingFlowContainer> {
           onPressed: () async {
             // Trigger physical feedback
             await _triggerScanFeedback();
-            
+
             // Proceed to success page
             if (context.mounted) {
               _pageController.nextPage(
