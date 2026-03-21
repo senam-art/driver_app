@@ -1,5 +1,5 @@
 // lib/features/driver/tabs/journeys_tab.dart
-import 'package:driver_app/widgets/driver/schedule_item.dart';
+import 'package:driver_app/driver/driver_widgets/schedule_item.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Add 'intl' to your pubspec.yaml
 

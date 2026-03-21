@@ -2,9 +2,9 @@ import 'package:driver_app/driver/driver_module_screens/active_journey_screen.da
 import 'package:driver_app/services/api_service.dart';
 import 'package:driver_app/theme/app_colors.dart';
 import 'package:driver_app/widgets/ashesi_map.dart';
-import 'package:driver_app/widgets/driver/schedule_item.dart';
-import 'package:driver_app/widgets/driver/slider_button.dart';
-import 'package:driver_app/widgets/driver/stat_card.dart';
+import 'package:driver_app/driver/driver_widgets/schedule_item.dart';
+import 'package:driver_app/driver/driver_widgets/slider_button.dart';
+import 'package:driver_app/driver/driver_widgets/stat_card.dart';
 import 'package:flutter/material.dart';
 
 class DriverHomeTab extends StatefulWidget {

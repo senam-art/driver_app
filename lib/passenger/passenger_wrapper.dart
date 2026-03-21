@@ -1,8 +1,8 @@
 import 'package:driver_app/passenger/passenger_module_screens/track_tab.dart';
-import 'package:driver_app/widgets/passenger/live_map_component.dart';
+import 'package:driver_app/passenger/passenger_widgets/live_map_component.dart';
 import 'package:flutter/material.dart';
 import 'package:driver_app/passenger/passenger_module_screens/passenger_home.dart';
-import 'package:driver_app/widgets/passenger/boarding_flow.dart';
+import 'package:driver_app/passenger/passenger_widgets/boarding_flow.dart';
 
 class PassengerMainWrapper extends StatefulWidget {
   const PassengerMainWrapper({super.key});

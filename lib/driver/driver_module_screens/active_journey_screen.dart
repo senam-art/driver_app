@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '/widgets/driver/slider_button.dart'; // We reuse the slider we built earlier
+import '../driver_widgets/slider_button.dart'; // We reuse the slider we built earlier
 
 class ActiveJourneyPage extends StatefulWidget {
   const ActiveJourneyPage({super.key});

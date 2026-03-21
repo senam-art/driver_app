@@ -2,7 +2,7 @@ import 'package:driver_app/driver/driver_module_screens/driver_homepage.dart';
 import 'package:driver_app/driver/driver_module_screens/journey_page.dart';
 import 'package:driver_app/driver/driver_module_screens/journeys_tab.dart';
 import 'package:flutter/material.dart';
-import '../../widgets/floating_nav_bar.dart';
+import '../widgets/floating_nav_bar.dart';
 
 class DriverMainScreen extends StatefulWidget {
   const DriverMainScreen({super.key});

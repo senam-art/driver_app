@@ -40,3 +40,5 @@ android/app/build/
 # Environment files
 .env
 *.env
+
+lib/config.dart

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:driver_app/widgets/passenger/pulsating_nfc_icon.dart';
+import 'package:driver_app/passenger/passenger_widgets/pulsating_nfc_icon.dart';
 import 'package:vibration/vibration.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:audioplayers/audioplayers.dart';
